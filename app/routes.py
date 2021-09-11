@@ -1,14 +1,12 @@
 from flask import render_template, flash, redirect, url_for, request
 from werkzeug.urls import url_parse
-from app import app
+from app import app, db
 from app.forms import LoginForm, RegistrationForm
 from app.models import User
 from flask_login import current_user, login_user, logout_user, login_required
 
 
-@app.route('/')
 @app.route('/index')
-@login_required
 def index():
     return render_template('index.html', title='Home')
 
@@ -16,7 +14,7 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('user'))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
@@ -28,10 +26,11 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
+@app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('user', username=current_user.username))
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -41,16 +40,26 @@ def login():
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
 
-        # Restricted access, redirect after logging in
+        # Restricted access page, grant access only after logging in
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
+            next_page = url_for('index')  #todo - error page
 
-        return redirect(url_for('index'))
+        return redirect(next_page)
 
     return render_template('login.html', title='Sign In', form=form)
 
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
+
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    #todo (done) - show profile page only if passed username and current_user are same
+    if username != current_user.username:
+        return redirect(url_for('index')) #todo - error page
+    user = User.query.filter_by(username=current_user.username).first_or_404()
+    return render_template('user.html', user=user)
