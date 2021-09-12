@@ -12,9 +12,10 @@ def index():
 
 
 @app.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('user'))
+        return redirect(url_for('user', username=current_user.username))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
@@ -39,6 +40,8 @@ def login():
             flash('Invalid username or password')
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
+        # return redirect(url_for('user', username=current_user.username))
+
 
         # Restricted access page, grant access only after logging in
         next_page = request.args.get('next')
@@ -60,6 +63,7 @@ def logout():
 def user(username):
     #todo (done) - show profile page only if passed username and current_user are same
     if username != current_user.username:
-        return redirect(url_for('index')) #todo - error page
+        return redirect(url_for('index')) #todo - error page or restricted pageds
+
     user = User.query.filter_by(username=current_user.username).first_or_404()
     return render_template('user.html', user=user)
