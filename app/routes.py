@@ -4,6 +4,7 @@ from app import app, db
 from app.forms import LoginForm, RegistrationForm
 from app.models import User
 from flask_login import current_user, login_user, logout_user, login_required
+from flask_dance.contrib.google import google
 
 
 @app.route('/index')
@@ -27,11 +28,21 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
+@app.route('/glogin')
+def glogin():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v1/userinfo")
+    assert resp.ok, resp.text
+    return render_template('glogin.html', guser=resp.json())
+
 @app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('user', username=current_user.username))
+    if google.authorized:
+        return redirect(url_for('glogin'))
 
     form = LoginForm()
     if form.validate_on_submit():
