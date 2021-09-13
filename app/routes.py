@@ -13,7 +13,6 @@ def index():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@login_required
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('user', username=current_user.username))
