@@ -5,4 +5,5 @@
     <h1>Name: {{ user.name }}</h1>
     <h1>Username: {{ user.username }}</h1>
     <h1>Email: {{ user.email }}</h1>
+    <p><a href="{{ url_for('update_password') }}">Set/Update Password</a></p>
 {% endblock %}

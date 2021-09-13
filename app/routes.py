@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request
 from werkzeug.urls import url_parse
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, UpdatePasswordForm
 from app.models import User
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_dance.contrib.google import google
@@ -98,3 +98,27 @@ def user(identifier):
         user = User.query.filter_by(username=current_user.username).first_or_404()
 
     return render_template('user.html', user=user)
+
+
+@app.route('/update_password', methods=['GET', 'POST'])
+@login_required
+def update_password():
+    form = UpdatePasswordForm()
+    if form.validate_on_submit():
+        if hasattr(current_user, 'password'):
+            if current_user.check_password(form.password.data):
+                flash("New password cannot be same as previous password.")
+                return redirect(url_for('update_password'))
+
+        current_user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('user', identifier=current_user.username))
+
+    # elif request.method == 'GET':
+    #     form.username.data = current_user.username
+    #     form.email.data = current_user.email
+    #     if hasattr(current_user, 'password'):
+    #         form.password.data = current_user.password
+
+    return render_template('update_password.html', title='Set/Update Password', form=form)
