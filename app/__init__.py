@@ -15,8 +15,9 @@ login = LoginManager(app)
 login.login_view = 'login'
 
 google_bp = make_google_blueprint(scope=["profile", "email"],
+                                  offline=True,
                                   redirect_url=app.config['REDIRECT_URL'])
-                                  #offline=True)
+
 app.register_blueprint(google_bp, url_prefix="/login")
 
 from app import routes, models
