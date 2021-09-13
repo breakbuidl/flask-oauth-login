@@ -7,9 +7,9 @@ from flask_login import current_user, login_user, logout_user, login_required
 from flask_dance.contrib.google import google
 
 
-@app.route('/index')
-def index():
-    return render_template('index.html', title='Home')
+@app.route('/home')
+def home():
+    return render_template('home.html', title='Home')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -51,7 +51,7 @@ def glogin():
     return redirect(url_for('user', identifier=current_user.username))
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -70,7 +70,7 @@ def login():
         # Restricted access page, grant access only after logging in
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')  #todo - error page
+            next_page = url_for('home')  #todo - error page
 
         return redirect(next_page)
 
@@ -89,12 +89,12 @@ def user(identifier):
     # Check if identifire is id or username
     if isinstance(identifier, int):
         if identifier != current_user.id:
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         user = User.query.filter_by(id=current_user.id).first_or_404()
     else:
         #todo (done) - show profile page only if passed username and current_user are same
         if identifier != current_user.username:
-            return redirect(url_for('index')) #todo - error page or restricted pageds
+            return redirect(url_for('home')) #todo - error page or restricted pageds
         user = User.query.filter_by(username=current_user.username).first_or_404()
 
     return render_template('user.html', user=user)
